@@ -1,9 +1,11 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda" if use_cuda else "cpu")
+print(device)
 
-dropout_value = 0.1
+dropout_value = 0.2
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -35,26 +37,33 @@ class Net(nn.Module):
             nn.ReLU(),
             nn.BatchNorm2d(64),
             nn.Dropout(dropout_value)
+        )
+
+        self.dilationblock1 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=2, dilation=2, bias=False), #Output size- 16. RF=22
+            nn.ReLU(),
+            nn.BatchNorm2d(64),
+            nn.Dropout(dropout_value)
         ) 
 
-        self.pool2 = nn.MaxPool2d(2, 2) # output_size = 8 RF = 22 Jout = 4
+        self.pool2 = nn.MaxPool2d(2, 2) # output_size = 8 RF = 24 Jout = 4
 
         #Convolution Layer-3
         self.convblock3 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=1, bias=False), #Output size- 8. RF=22
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=1, bias=False), #Output size- 8. RF=32
             nn.ReLU(),
             nn.BatchNorm2d(128),
             nn.Dropout(dropout_value),
 
-            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(3, 3), padding=1, bias=False), #Output size- 8. RF=30
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(3, 3), padding=1, bias=False), #Output size- 8. RF=40
             nn.ReLU(),
             nn.BatchNorm2d(128),
             nn.Dropout(dropout_value)
         )
 
-        self.pool3 = nn.MaxPool2d(2, 2) # output_size = 4 RF = 50 Jout = 8
+        self.pool3 = nn.MaxPool2d(2, 2) # output_size = 4 RF = 44 Jout = 8
 
-        #Convolution Layer-4 294K parameters
+        #Convolution Layer-4 294K parameters --> 32K
         #Depthwise Seperable Convolution
         self.DepthwiseSepConv = nn.Sequential(
             # nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3), padding=1, bias=False), 
@@ -62,7 +71,7 @@ class Net(nn.Module):
             # nn.BatchNorm2d(256),
             # nn.Dropout(dropout_value)
             
-            #Depthwise Convolution #Output size- 4. RF=46
+            #Depthwise Convolution #Output size- 4. RF=60
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(3, 3), padding=1, groups = 128, bias=False),
             #Pointwise Convolution
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(1, 1), bias=False),
@@ -89,6 +98,7 @@ class Net(nn.Module):
         x = self.convblock1(x)
         x = self.pool1(x)
         x = self.convblock2(x)
+        x = self.dilationblock1(x)
         x = self.pool2(x)
         x = self.convblock3(x)
         x = self.pool3(x)
