@@ -1,5 +1,6 @@
-import matplotlib
+import matplotlib.pyplot as plt
 def train_test_metrics_graph(train_accuracy, train_loss, test_accuracy, test_loss):
+  
   fig, axs = plt.subplots(1,2,figsize=(15,10))
   axs[0].set_title("Accuracy")
   axs[0].plot(train_accuracy, label = "train_accuracy")
