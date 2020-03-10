@@ -1,5 +1,4 @@
 import torch
-# Test model
 def test(net, device, testloader, criterion): 
   correct = 0
   total = 0
@@ -12,7 +11,7 @@ def test(net, device, testloader, criterion):
           labels = labels.to(device)
           outputs = net(images)
 
-          epoch_test_loss += criterion(outputs, labels)
+          epoch_test_loss += criterion(outputs, labels).item()
           _, predicted = torch.max(outputs.data, 1)
           total += labels.size(0)
           correct += (predicted == labels).sum().item()
@@ -20,4 +19,4 @@ def test(net, device, testloader, criterion):
   epoch_test_loss /= len(testloader)
   # print("Test loss=",epoch_test_loss)
   # print('Accuracy of the network on the 10000 test images: %d %%' %epoch_test_accuracy)
-  return epoch_test_accuracy, epoch_test_loss.cpu().numpy()
+  return epoch_test_accuracy, epoch_test_loss
